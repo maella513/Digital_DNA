@@ -1,0 +1,31 @@
+{
+    "target": "target_screen_time_next_day",
+    "model": "RandomForestRegressor",
+    "split": "chronological_80_20",
+    "train_rows": 10500,
+    "test_rows": 3000,
+    "train_end_date": "2026-10-23",
+    "test_start_date": "2026-10-24",
+    "baseline": {
+        "MAE": 0.8014,
+        "RMSE": 1.0064,
+        "R2": 0.7969
+    },
+    "random_forest": {
+        "MAE": 0.6588,
+        "RMSE": 0.8313,
+        "R2": 0.8615
+    },
+    "feature_importance": {
+        "screen_time_hours_rolling3": 0.9312,
+        "social_media_hours_lag0": 0.0093,
+        "screen_time_hours_lag0": 0.0088,
+        "productivity_hours_lag0": 0.0083,
+        "sleep_hours_rolling3": 0.0082,
+        "notifications_lag0": 0.0078,
+        "steps_rolling3": 0.0077,
+        "sleep_hours_lag0": 0.0076,
+        "steps_lag0": 0.0075,
+        "target_day_of_week": 0.0035
+    }
+}

@@ -1,13 +1,37 @@
 
+# Environnement virtuel
 .venv/
+venv/
+env/
+
+# Python
 __pycache__/
 *.pyc
-.env
-*.log
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
 
+# Configuration locale et secrets
+.env
+.env.*
+!.env.example
+.streamlit/secrets.toml
+
+# Fichiers temporaires
+*.log
+.DS_Store
+Thumbs.db
+Figure_1.png
+
+# Données brutes archivées
 data/raw/*
 !data/raw/sample_source.csv
 
-data/*.db
-data/*.sqlite
-data/*.sqlite3
+# Bases de données locales
+*.db
+*.sqlite
+*.sqlite3
+
+# Fichiers IDE
+.vscode/
+.idea/
