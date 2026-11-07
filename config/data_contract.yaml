@@ -1,0 +1,89 @@
+
+# DIGITAL DNA - DATA CONTRACT
+# Version 1.0
+
+dataset:
+  name: digital_dna
+  version: "1.0"
+  description: >
+    Donnees synthetiques longitudinales
+    de comportements numeriques et quotidiens.
+  source: synthetic_python_generator
+  format: csv
+  grain: one_user_per_day
+  minimum_rows: 100
+
+primary_key:
+  - user_id
+  - date
+
+columns:
+  user_id:
+    type: integer
+    required: true
+    min: 1
+
+  date:
+    type: date
+    required: true
+
+  screen_time_hours:
+    type: float
+    required: true
+    min: 0
+    max: 24
+
+  social_media_hours:
+    type: float
+    required: true
+    min: 0
+    max: 24
+
+  sleep_hours:
+    type: float
+    required: true
+    min: 0
+    max: 24
+
+  steps:
+    type: integer
+    required: true
+    min: 0
+    max: 100000
+
+  distance_km:
+    type: float
+    required: true
+    min: 0
+    max: 100
+
+  notifications:
+    type: integer
+    required: true
+    min: 0
+    max: 10000
+
+  productivity_hours:
+    type: float
+    required: true
+    min: 0
+    max: 24
+
+quality_rules:
+  - id: Q01
+    description: No missing required values
+
+  - id: Q02
+    description: Unique user_id and date
+
+  - id: Q03
+    description: Numeric values within valid ranges
+
+  - id: Q04
+    description: Social media time cannot exceed screen time
+
+  - id: Q05
+    description: Dates must be valid
+
+  - id: Q06
+    description: User IDs must be positive integers

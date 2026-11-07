@@ -1,0 +1,13 @@
+{
+    "pipeline": "digital-dna",
+    "executed_at": "2026-11-07T13:58:06.220049+00:00",
+    "source_file": "digital_dna_20261107T135805_929431Z.csv",
+    "input_rows": 15000,
+    "accepted_rows": 15000,
+    "rejected_rows": 0,
+    "duplicates_removed": 0,
+    "quality_status": "PASS",
+    "duration_seconds": 0.293,
+    "curated_file": "data\\curated\\digital_dna_curated.csv",
+    "rejected_file": "data\\rejected\\rejected_rows.csv"
+}
