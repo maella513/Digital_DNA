@@ -1,195 +1,420 @@
 # Digital DNA — Jumeau numérique comportemental
 
-## Présentation
+**Projet Data Engineering, Machine Learning & Intelligence Artificielle**
 
-Digital DNA est un projet de collecte et de traitement de données visant à construire un jumeau numérique comportemental à partir d'observations quotidiennes.
+**ESEO — Cycle ingénieur, spécialité IA & Data | 2026-2027**
 
-L'application permet de reconstituer les habitudes d'un utilisateur, de suivre leur évolution et de préparer leur exploitation dans un système d'analyse personnalisé.
+## 1. Présentation
 
-**Question centrale :** Comment collecter, fiabiliser et exploiter des données d'habitudes quotidiennes pour construire un profil numérique individuel évolutif ?
+Digital DNA est un projet de collecte, de traitement et d'analyse de données visant à construire un **jumeau numérique comportemental** à partir d'observations quotidiennes.
 
-Ce projet a été développé dans le cadre du module **Architectures BD et collecte de données — ESEO, 2026-2027**.
+Le système permet de reconstituer les habitudes numériques d'un utilisateur, d'analyser leur évolution, d'identifier différents profils comportementaux et de prédire certaines habitudes futures grâce au Machine Learning.
 
-## Objectifs
+Une application web interactive développée avec **Streamlit** permet d'explorer les données, de visualiser les profils utilisateurs et de simuler différents comportements.
 
-- Construire une chaîne de collecte reproductible.
-- Valider les données selon un contrat défini.
+**Problématique :** Comment collecter, fiabiliser, stocker et exploiter des données d'habitudes quotidiennes afin de construire un profil numérique individuel évolutif et prédictif ?
+
+Le projet a été réalisé dans le cadre du module **Architectures BD et collecte de données — ESEO**.
+
+## 2. Objectifs
+
+- Construire une chaîne de collecte et de traitement reproductible.
+- Automatiser la validation et la transformation des données.
 - Détecter les anomalies et conserver les observations rejetées.
-- Produire un dataset fiable et exploitable.
-- Générer un rapport d'exécution.
-- Analyser les habitudes individuelles à travers un jumeau numérique.
+- Centraliser les observations validées dans une base relationnelle SQLite.
+- Mettre en place une ingestion incrémentale sans duplication.
+- Produire des rapports de qualité et d'exécution.
+- Identifier des profils comportementaux grâce au clustering.
+- Prédire le temps d'écran du lendemain avec un modèle de Machine Learning.
+- Développer une interface interactive de visualisation et de simulation.
+- Automatiser les tests avec Pytest et GitHub Actions.
 
-## Données utilisées
+## 3. Données utilisées
 
-Le projet utilise un dataset synthétique de **15 000 observations**, représentant **500 utilisateurs sur 30 jours**.
-
-Chaque observation contient les informations suivantes :
+Le projet utilise un dataset entièrement synthétique de **15 000 observations**, représentant **500 utilisateurs suivis pendant 30 jours**.
 
 | Variable | Description |
 |---|---|
 | `user_id` | Identifiant de l'utilisateur |
 | `date` | Date de l'observation |
-| `screen_time_hours` | Temps d'écran quotidien, en heures |
-| `social_media_hours` | Temps consacré aux réseaux sociaux, en heures |
-| `sleep_hours` | Durée du sommeil, en heures |
+| `screen_time_hours` | Temps d'écran quotidien (heures) |
+| `social_media_hours` | Temps consacré aux réseaux sociaux (heures) |
+| `sleep_hours` | Durée du sommeil (heures) |
 | `steps` | Nombre de pas quotidiens |
-| `distance_km` | Distance parcourue, en kilomètres |
+| `distance_km` | Distance parcourue (kilomètres) |
 | `notifications` | Nombre de notifications |
-| `productivity_hours` | Temps de productivité simulé, en heures |
+| `productivity_hours` | Temps de productivité simulé (heures) |
 
-Deux variables sont ajoutées après transformation : `social_media_ratio` et `day_of_week`.
+Deux variables supplémentaires sont calculées lors de la transformation :
 
-Les données sont entièrement synthétiques et ne représentent pas des personnes réelles.
+- `social_media_ratio` : proportion du temps d'écran consacrée aux réseaux sociaux.
+- `day_of_week` : jour de la semaine.
 
-## Cas d'usage
+**Important :** les données sont entièrement synthétiques et ne correspondent pas à des personnes réelles. Les analyses et prédictions illustrent une démarche technique et ne constituent pas des conclusions scientifiques sur les comportements humains.
 
-1. Consulter le profil comportemental d'un utilisateur.
-2. Comparer ses habitudes entre différentes périodes.
-3. Actualiser son profil à partir de nouvelles observations.
+## 4. Architecture de données
 
-## Indicateurs principaux
+Digital DNA repose sur une architecture modulaire associant **ETL, stockage relationnel, Machine Learning et visualisation interactive**.
 
-- Temps d'écran quotidien moyen.
-- Durée moyenne de sommeil.
-- Nombre moyen de pas quotidiens.
+### Pipeline ETL
 
-## Architecture
+Le pipeline principal, `src/pipeline.py`, comprend les étapes suivantes :
 
-Le pipeline comprend les étapes suivantes :
+1. **Génération :** création de données synthétiques avec Python et NumPy.
+2. **Collecte :** lecture et archivage horodaté des données brutes.
+3. **Validation :** application des règles définies dans le contrat YAML.
+4. **Transformation :** nettoyage, typage et enrichissement des observations acceptées.
+5. **Stockage :** export CSV et chargement incrémental dans SQLite.
+6. **Reporting :** génération d'un rapport JSON contenant les indicateurs d'exécution.
 
-1. **Génération :** création des données synthétiques avec Python et NumPy.
-2. **Collecte :** archivage horodaté du fichier brut.
-3. **Validation :** application des règles du contrat de données.
-4. **Transformation :** enrichissement des observations acceptées.
-5. **Stockage :** export des données validées et des rejets.
-6. **Reporting :** production d'un rapport JSON.
+### Organisation des flux
 
-Le diagramme complet se trouve dans `docs/architecture.png`.
+```text
+Données synthétiques (CSV)
+          |
+          v
+Collecte et archivage
+          |
+          v
+Validation des données
+          |
+          v
+Transformation et enrichissement
+          |
+          +--------------------------+
+          |                          |
+          v                          v
+Dataset CSV curated          Base SQLite
+          |                  daily_behavior
+          |                          |
+          v                          |
+Machine Learning                    |
+Clustering / Prédiction             |
+          |                          |
+          +--------------------------+
+          |
+          v
+Application Streamlit
 
-Le projet comprend également un prototype de jumeau numérique utilisant SQLite. Son chargement est actuellement réalisé séparément par `src/etl_pipeline.py`.
+Contrôles qualité -> Rejets CSV
+                  -> Rapport JSON
 
-## Technologies
+Tests Pytest -> GitHub Actions (CI)
+```
 
-- Python 3.11+
-- Pandas et NumPy
-- PyYAML
-- SQLite et SQLAlchemy
-- Matplotlib
-- Scikit-learn, Plotly et Streamlit pour les extensions analytiques prévues
+Le diagramme d'architecture initial est disponible dans `docs/architecture.png`. Il peut être actualisé pour représenter les nouveaux composants.
 
-## Installation
+## 5. Stockage relationnel SQLite
 
-Cloner le dépôt GitHub ou récupérer l'archive ZIP du projet.
+Le pipeline intègre désormais un stockage relationnel persistant avec **SQLite et SQLAlchemy**.
 
-Créer un environnement virtuel :
+Les observations validées sont chargées dans la table `daily_behavior`.
 
-```powershell
+### Structure de la table
+
+La table contient les données comportementales et les indicateurs dérivés.
+
+Une clé primaire composée garantit l'unicité de chaque observation :
+
+`PRIMARY KEY (user_id, date)`
+
+### Ingestion incrémentale
+
+Le module `src/database.py` assure le chargement incrémental des observations.
+
+Il permet :
+
+- D'insérer uniquement les nouvelles observations.
+- D'ignorer les couples utilisateur/date déjà présents.
+- De conserver les données historiques.
+- De relancer le pipeline sans créer de doublons.
+- De consulter les données stockées en base.
+
+Les dates sont normalisées au format `YYYY-MM-DD`.
+
+L'insertion utilise une stratégie `INSERT OR IGNORE`, associée à une contrainte d'unicité.
+
+**Remarque :** les observations existantes ne sont pas mises à jour automatiquement si leurs valeurs changent. Le mécanisme actuel privilégie l'ajout de nouvelles observations.
+
+## 6. Contrat et qualité des données
+
+Le contrat de données est défini dans :
+
+`config/data_contract.yaml`
+
+Six règles principales sont appliquées :
+
+| Règle | Contrôle |
+|---|---|
+| Q01 | Absence de valeurs obligatoires manquantes |
+| Q02 | Unicité du couple utilisateur/date |
+| Q03 | Respect des plages numériques autorisées |
+| Q04 | Temps sur les réseaux sociaux inférieur ou égal au temps d'écran |
+| Q05 | Validité des dates |
+| Q06 | Identifiants utilisateurs strictement positifs et entiers |
+
+Les observations non conformes sont conservées dans :
+
+`data/rejected/rejected_rows.csv`
+
+Le rapport d'exécution est enregistré dans :
+
+`reports/run_report.json`
+
+Il contient notamment le nombre de lignes entrantes, acceptées et rejetées, le statut qualité, la durée du traitement et les statistiques de chargement SQLite.
+
+## 7. Machine Learning — Prédiction du temps d'écran
+
+Digital DNA intègre un modèle supervisé permettant d'estimer le **temps d'écran d'un utilisateur à J+1**.
+
+### Préparation des données
+
+Les observations sont transformées en variables explicatives temporelles :
+
+- Valeurs récentes des indicateurs comportementaux.
+- Variables retardées (*lags*).
+- Moyennes mobiles sur trois jours.
+- Informations temporelles.
+
+Le dataset final utilisé pour l'entraînement et l'évaluation contient **13 500 observations**.
+
+### Modèles évalués
+
+Deux approches ont été comparées :
+
+- Un modèle de référence (*baseline*).
+- Un modèle **Random Forest Regressor**, développé avec Scikit-learn.
+
+### Résultats
+
+| Indicateur | Baseline | Random Forest |
+|---|---:|---:|
+| MAE | 0,8014 | **0,6588** |
+| RMSE | 1,0064 | **0,8313** |
+| R² | 0,7969 | **0,8615** |
+
+Le modèle Random Forest obtient une réduction d'environ **17,8 % de l'erreur absolue moyenne** par rapport à la baseline.
+
+Ces résultats sont obtenus sur les données synthétiques du projet.
+
+## 8. Clustering et profils comportementaux
+
+Une approche non supervisée basée sur **K-Means** permet de regrouper les utilisateurs selon leurs habitudes numériques.
+
+Le nombre de clusters a été choisi à partir d'une comparaison des scores de silhouette.
+
+**Configuration retenue : 2 clusters, avec un score de silhouette de 0,3700.**
+
+| Profil | Utilisateurs | Caractéristiques |
+|---|---:|---|
+| Modéré | 239 | Temps d'écran et usage des réseaux sociaux plus faibles |
+| Intensif | 261 | Temps d'écran et notifications plus élevés |
+
+Une analyse en composantes principales (**PCA**) permet de représenter les utilisateurs dans un espace bidimensionnel.
+
+Les deux premières composantes expliquent environ **76,97 % de la variance**.
+
+Ces profils sont descriptifs et dépendent des données synthétiques générées.
+
+## 9. Application interactive Streamlit
+
+L'application web permet d'explorer le jumeau numérique à travers cinq espaces fonctionnels :
+
+1. **Vue d'ensemble :** indicateurs globaux et statistiques du dataset.
+2. **Profil utilisateur :** consultation des habitudes d'un utilisateur sélectionné.
+3. **Prédictions ML :** estimation du temps d'écran du lendemain.
+4. **Simulateur :** exploration de scénarios comportementaux.
+5. **Clustering et PCA :** visualisation des groupes d'utilisateurs et de leur positionnement.
+
+L'interface utilise **Streamlit et Plotly** pour présenter des indicateurs, graphiques et visualisations interactives.
+
+## 10. Technologies utilisées
+
+| Domaine | Technologies |
+|---|---|
+| Développement | Python 3.13 |
+| Traitement de données | Pandas, NumPy |
+| Validation | PyYAML, contrat de données |
+| Base de données | SQLite, SQLAlchemy |
+| Machine Learning | Scikit-learn, Joblib |
+| Visualisation | Plotly, Matplotlib |
+| Application web | Streamlit |
+| Tests | Pytest |
+| Intégration continue | GitHub Actions |
+| Versionnement | Git, GitHub |
+
+## 11. Installation
+
+### Prérequis
+
+- Python 3.13 recommandé.
+- Git, pour cloner le dépôt.
+- Un terminal PowerShell ou équivalent.
+
+### Cloner le projet
+
+```bash
+git clone https://github.com/maella513/Digital_DNA.git
+cd Digital_DNA
+```
+
+### Créer un environnement virtuel
+
+```bash
 python -m venv .venv
 ```
 
-Activer l'environnement sous Windows PowerShell :
+Sous Windows PowerShell :
 
 ```powershell
 .\.venv\Scripts\Activate.ps1
 ```
 
-Installer les dépendances :
+### Installer les dépendances
 
-```powershell
+```bash
 python -m pip install -r requirements.txt
 ```
 
-## Exécution
+## 12. Exécution du projet
 
-### 1. Générer les données synthétiques
+### Générer les données synthétiques
 
-```powershell
+```bash
 python src/generate_data.py
 ```
 
-### 2. Exécuter le pipeline complet
+### Exécuter le pipeline ETL complet
 
-```powershell
+```bash
 python src/pipeline.py
 ```
 
-Le pipeline produit :
+Le pipeline produit ou actualise :
 
-- Une copie brute horodatée dans `data/raw/`.
-- Le dataset nettoyé dans `data/curated/digital_dna_curated.csv`.
-- Les observations rejetées dans `data/rejected/rejected_rows.csv`.
-- Un rapport dans `reports/run_report.json`.
+- `data/raw/` : archives horodatées des données brutes.
+- `data/curated/digital_dna_curated.csv` : observations validées.
+- `data/rejected/rejected_rows.csv` : observations rejetées.
+- `data/digital_dna.db` : base relationnelle SQLite.
+- `reports/run_report.json` : rapport d'exécution.
 
-### 3. Exécuter les tests de qualité
+### Lancer l'application Streamlit
 
-```powershell
-python tests/test_quality.py
+```bash
+python -m streamlit run app.py
 ```
 
-### 4. Démontrer les rejets
+L'application est généralement accessible à l'adresse :
 
-```powershell
+`http://localhost:8501`
+
+### Exécuter les tests
+
+```bash
+python -m pytest tests/ -v
+```
+
+### Démontrer la gestion des rejets
+
+```bash
 python tests/create_invalid_sample.py
 python src/pipeline.py --source tests/sample_with_errors.csv
 ```
 
-Cette démonstration doit produire 101 observations entrantes, 96 acceptées et 5 rejetées.
+Le jeu d'essai prévu contient 101 observations, dont 96 acceptées et 5 rejetées.
 
-### 5. Restaurer le dataset principal
+Pour restaurer le dataset CSV principal :
 
-```powershell
+```bash
 python src/pipeline.py
 ```
 
-### 6. Utiliser le prototype de jumeau numérique
+**Attention :** le chargement SQLite est incrémental. Restaurer le CSV principal ne supprime pas les observations déjà insérées en base.
 
-```powershell
-python src/etl_pipeline.py
-python src/digital_twin.py
-```
+## 13. Tests et intégration continue
 
-## Contrat et règles de qualité
+Le projet dispose d'une suite de **16 tests Pytest réussis**.
 
-Le contrat est défini dans `config/data_contract.yaml`.
+| Domaine | Nombre de tests |
+|---|---:|
+| SQLite et ingestion incrémentale | 4 |
+| Machine Learning et clustering | 11 |
+| Qualité des données | 1 |
+| **Total** | **16** |
 
-Six règles sont appliquées :
+Les tests vérifient notamment :
 
-- **Q01 :** valeurs obligatoires non manquantes.
-- **Q02 :** unicité du couple `user_id` et `date`.
-- **Q03 :** valeurs numériques dans les plages autorisées.
-- **Q04 :** temps sur les réseaux sociaux inférieur ou égal au temps d'écran.
-- **Q05 :** dates valides.
-- **Q06 :** identifiants utilisateurs strictement positifs et entiers.
+- La validité du dataset.
+- L'absence de doublons.
+- La cohérence des variables ML.
+- Le fonctionnement des prédictions.
+- La couverture des utilisateurs par les clusters.
+- La présence des coordonnées PCA.
+- L'insertion initiale en base.
+- L'idempotence des chargements SQLite.
+- L'ajout de nouvelles observations.
+- La lecture des données stockées.
 
-Les observations rejetées sont conservées avec leur motif.
+### GitHub Actions
 
-## Idempotence
+Un workflow GitHub Actions automatise les tests lors des modifications envoyées sur la branche principale et des pull requests ciblant cette branche.
 
-Le pipeline reconstruit le dataset `curated` à chaque exécution.
+Le workflow prépare l'environnement Python, installe les dépendances et exécute Pytest.
 
-Une seconde exécution avec la même source ne crée donc pas de doublons supplémentaires.
+**État vérifié : tests réussis localement et workflow GitHub Actions validé.**
 
-Le fichier de sortie contient 15 000 observations et aucun doublon sur le couple `user_id` / `date` lorsque la source principale est utilisée.
+Cette automatisation correspond à une démarche d'intégration continue (**CI**). Le déploiement automatique n'est pas encore intégré.
 
-## Limites connues
+## 14. Idempotence et reproductibilité
 
-- Les données sont synthétiques et ne permettent pas de conclure sur des comportements humains réels.
-- La collecte est actuellement locale et réalisée par lots.
-- Le pipeline principal ne met pas encore automatiquement à jour SQLite.
-- Les fichiers de sortie `curated`, `rejected` et le rapport sont remplacés à chaque exécution.
-- Les fonctionnalités prédictives et le tableau de bord interactif restent à développer.
+Le pipeline peut être exécuté plusieurs fois sur le même jeu de données.
 
-## Améliorations futures
+- Le fichier CSV curated est régénéré à chaque exécution.
+- Les rejets et le rapport JSON sont actualisés.
+- La base SQLite conserve les observations existantes.
+- Les nouvelles observations sont insérées uniquement si leur clé utilisateur/date est absente.
 
-- Intégrer de nouvelles observations sans reconstruire l'ensemble de l'historique.
-- Connecter automatiquement le pipeline validé à SQLite.
-- Ajouter un tableau de bord Streamlit.
-- Développer des prévisions comportementales et des simulations interactives.
-- Évaluer les modèles prédictifs sur des données adaptées.
+Cette architecture distingue donc les fichiers de sortie du lot courant du stockage historique en base relationnelle.
 
-## Documentation
+## 15. Limites connues
 
-- `docs/architecture.png` : diagramme d'architecture.
-- `docs/source_assessment.md` : description, conformité et limites de la source.
-- `config/data_contract.yaml` : contrat de données.
-- `reports/run_report.json` : rapport de la dernière exécution.
+- Les données sont synthétiques et ne reflètent pas nécessairement des comportements réels.
+- La collecte reste locale et réalisée par lots CSV.
+- L'ingestion SQLite est incrémentale, mais ne gère pas encore les mises à jour des observations existantes.
+- Les fichiers CSV curated et rejected sont remplacés à chaque exécution.
+- Les modèles ML ont été évalués sur les données synthétiques du projet.
+- Le déploiement automatisé et la supervision de production ne sont pas encore intégrés.
+- L'application Streamlit fonctionne localement ; son accessibilité publique dépend d'un déploiement distinct.
+
+## 16. Perspectives d'amélioration
+
+- Connecter des sources de données externes via API.
+- Mettre en place une collecte planifiée ou en streaming.
+- Ajouter une stratégie d'upsert pour actualiser les observations existantes.
+- Étendre l'architecture vers PostgreSQL ou un environnement cloud.
+- Améliorer la robustesse et la généralisation des modèles prédictifs.
+- Ajouter des contrôles de qualité et des tests d'intégration supplémentaires.
+- Mettre en place un déploiement continu et une supervision applicative.
+- Renforcer la confidentialité et la sécurité pour une éventuelle utilisation de données réelles.
+
+## 17. Documentation
+
+| Fichier | Description |
+|---|---|
+| `docs/architecture.png` | Diagramme d'architecture initial |
+| `docs/source_assessment.md` | Description et limites de la source |
+| `config/data_contract.yaml` | Contrat de données |
+| `src/pipeline.py` | Pipeline ETL principal |
+| `src/database.py` | Stockage SQLite et ingestion incrémentale |
+| `src/etl_pipeline.py` | Prototype ETL SQLite initial |
+| `reports/run_report.json` | Rapport de la dernière exécution |
+| `tests/test_database.py` | Tests du stockage SQLite |
+| `tests/test_ml.py` | Tests des fonctionnalités ML |
+| `tests/test_quality.py` | Tests de qualité des données |
+| `.github/workflows/tests.yml` | Workflow d'intégration continue |
+
+---
+
+**Digital DNA — ESEO 2026-2027**
+
+Projet académique associant Data Engineering, architecture de bases de données, Machine Learning et visualisation interactive.
