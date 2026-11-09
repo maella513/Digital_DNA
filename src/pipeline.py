@@ -10,6 +10,8 @@ import pandas as pd
 from collect import collect, DEFAULT_SOURCE
 from validate import validate_data
 from transform import transform_data, save_curated
+from database import load_incremental
+
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 REJECTED_DIR = BASE_DIR / "data" / "rejected"
@@ -21,27 +23,45 @@ def run_pipeline(source_path: Path):
 
     print("\n=== DIGITAL DNA : PIPELINE ===")
 
-    # 1. Collecte et archivage du fichier brut
+    # 1. Collecte et archivage
     raw_path = collect(source_path)
 
-    # 2. Lecture des données brutes
+    # 2. Lecture des données
     df = pd.read_csv(raw_path)
     input_rows = len(df)
 
-    # 3. Validation selon le contrat de données
+    # 3. Validation du contrat de données
     accepted, rejected = validate_data(df)
 
-    # 4. Transformation des données acceptées
+    # 4. Transformation
     curated = transform_data(accepted)
+
+    # 5. Chargement incrémental SQLite
+    database_result = load_incremental(curated)
+
+    # 6. Export CSV curated
     curated_path = save_curated(curated)
 
-    # 5. Conservation des rejets
-    REJECTED_DIR.mkdir(parents=True, exist_ok=True)
-    rejected_path = REJECTED_DIR / "rejected_rows.csv"
-    rejected.to_csv(rejected_path, index=False)
+    # 7. Conservation des rejets
+    REJECTED_DIR.mkdir(
+        parents=True,
+        exist_ok=True
+    )
 
-    # 6. Rapport d'exécution
-    REPORTS_DIR.mkdir(parents=True, exist_ok=True)
+    rejected_path = (
+        REJECTED_DIR / "rejected_rows.csv"
+    )
+
+    rejected.to_csv(
+        rejected_path,
+        index=False
+    )
+
+    # 8. Rapport d'exécution
+    REPORTS_DIR.mkdir(
+        parents=True,
+        exist_ok=True
+    )
 
     duplicate_count = int(
         rejected["rejection_reason"]
@@ -49,7 +69,10 @@ def run_pipeline(source_path: Path):
         .sum()
     )
 
-    duration = round(time.perf_counter() - start, 3)
+    duration = round(
+        time.perf_counter() - start,
+        3
+    )
 
     report = {
         "pipeline": "digital-dna",
@@ -72,13 +95,20 @@ def run_pipeline(source_path: Path):
         ),
         "rejected_file": str(
             rejected_path.relative_to(BASE_DIR)
-        )
+        ),
+        "database": database_result
     }
 
-    report_path = REPORTS_DIR / "run_report.json"
+    report_path = (
+        REPORTS_DIR / "run_report.json"
+    )
 
     report_path.write_text(
-        json.dumps(report, indent=4, ensure_ascii=False),
+        json.dumps(
+            report,
+            indent=4,
+            ensure_ascii=False
+        ),
         encoding="utf-8"
     )
 
@@ -87,7 +117,22 @@ def run_pipeline(source_path: Path):
     print(f"Observations acceptées : {len(accepted)}")
     print(f"Observations rejetées : {len(rejected)}")
     print(f"Doublons détectés : {duplicate_count}")
-    print(f"Statut : {report['quality_status']}")
+
+    print("\n=== STOCKAGE SQLITE ===")
+    print(
+        f"Nouvelles observations : "
+        f"{database_result['inserted_rows']}"
+    )
+    print(
+        f"Observations déjà présentes : "
+        f"{database_result['already_existing_rows']}"
+    )
+    print(
+        f"Total en base : "
+        f"{database_result['total_rows']}"
+    )
+
+    print(f"\nStatut : {report['quality_status']}")
     print(f"Durée : {duration} secondes")
     print(f"Dataset curated : {curated_path}")
     print(f"Rapport : {report_path}")
@@ -99,11 +144,14 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="Pipeline Digital DNA"
     )
+
     parser.add_argument(
         "--source",
         type=Path,
         default=DEFAULT_SOURCE,
         help="Chemin du fichier CSV source"
     )
+
     args = parser.parse_args()
+
     run_pipeline(args.source)
